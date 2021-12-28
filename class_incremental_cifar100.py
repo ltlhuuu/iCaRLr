@@ -208,8 +208,8 @@ for iteration_total in range(args.nb_runs):
         else:
             trainloader = torch.utils.data.DataLoader(trainset, batch_size=train_batch_size,
                 shuffle=True, num_workers=2)
-        testset.test_data = X_valid_cumul.astype('uint8')
-        testset.test_labels = map_Y_valid_cumul
+        testset.data = X_valid_cumul.astype('uint8')
+        testset.targets = map_Y_valid_cumul
         testloader = torch.utils.data.DataLoader(testset, batch_size=test_batch_size,
             shuffle=False, num_workers=2)
         print('Max and Min of train labels: {}, {}'.format(min(map_Y_train), max(map_Y_train)))
@@ -248,11 +248,11 @@ for iteration_total in range(args.nb_runs):
         print('Updating exemplar set...')
         for iter_dico in range(last_iter*args.nb_cl, (iteration+1)*args.nb_cl):
             # Possible exemplars in the feature space and projected on the L2 sphere
-            evalset.test_data = prototypes[iter_dico].astype('uint8')
-            evalset.test_labels = np.zeros(evalset.test_data.shape[0]) #zero labels
+            evalset.data = prototypes[iter_dico].astype('uint8')
+            evalset.targets = np.zeros(evalset.data.shape[0]) #zero labels
             evalloader = torch.utils.data.DataLoader(evalset, batch_size=eval_batch_size,
                 shuffle=False, num_workers=2)
-            num_samples = evalset.test_data.shape[0]            
+            num_samples = evalset.data.shape[0]            
             mapped_prototypes = compute_features(tg_feature_model, evalloader, num_samples, num_features)
             D = mapped_prototypes.T
             D = D/np.linalg.norm(D,axis=0)
@@ -286,16 +286,16 @@ for iteration_total in range(args.nb_runs):
                 current_cl = order[range(iteration2*args.nb_cl,(iteration2+1)*args.nb_cl)]
 
                 # Collect data in the feature space for each class
-                evalset.test_data = prototypes[iteration2*args.nb_cl+iter_dico].astype('uint8')
-                evalset.test_labels = np.zeros(evalset.test_data.shape[0]) #zero labels
+                evalset.data = prototypes[iteration2*args.nb_cl+iter_dico].astype('uint8')
+                evalset.targets = np.zeros(evalset.data.shape[0]) #zero labels
                 evalloader = torch.utils.data.DataLoader(evalset, batch_size=eval_batch_size,
                     shuffle=False, num_workers=2)
-                num_samples = evalset.test_data.shape[0]
+                num_samples = evalset.data.shape[0]
                 mapped_prototypes = compute_features(tg_feature_model, evalloader, num_samples, num_features)
                 D = mapped_prototypes.T
                 D = D/np.linalg.norm(D,axis=0)
                 # Flipped version also
-                evalset.test_data = prototypes[iteration2*args.nb_cl+iter_dico][:,:,:,::-1].astype('uint8')
+                evalset.data = prototypes[iteration2*args.nb_cl+iter_dico][:,:,:,::-1].astype('uint8')
                 evalloader = torch.utils.data.DataLoader(evalset, batch_size=eval_batch_size,
                     shuffle=False, num_workers=2)
                 mapped_prototypes2 = compute_features(tg_feature_model, evalloader, num_samples, num_features)
@@ -324,8 +324,8 @@ for iteration_total in range(args.nb_runs):
         # Calculate validation error of model on the first nb_cl classes:
         map_Y_valid_ori = np.array([order_list.index(i) for i in Y_valid_ori])
         print('Computing accuracy on the original batch of classes...')
-        evalset.test_data = X_valid_ori.astype('uint8')
-        evalset.test_labels = map_Y_valid_ori
+        evalset.data = X_valid_ori.astype('uint8')
+        evalset.targets = map_Y_valid_ori
         evalloader = torch.utils.data.DataLoader(evalset, batch_size=eval_batch_size,
                 shuffle=False, num_workers=2)
         ori_acc = compute_accuracy(tg_model, tg_feature_model, current_means, evalloader)
@@ -334,8 +334,8 @@ for iteration_total in range(args.nb_runs):
         # Calculate validation error of model on the cumul of classes:
         map_Y_valid_cumul = np.array([order_list.index(i) for i in Y_valid_cumul])
         print('Computing cumulative accuracy...')
-        evalset.test_data = X_valid_cumul.astype('uint8')
-        evalset.test_labels = map_Y_valid_cumul
+        evalset.data = X_valid_cumul.astype('uint8')
+        evalset.targets = map_Y_valid_cumul
         evalloader = torch.utils.data.DataLoader(evalset, batch_size=eval_batch_size,
                 shuffle=False, num_workers=2)        
         cumul_acc = compute_accuracy(tg_model, tg_feature_model, current_means, evalloader)
